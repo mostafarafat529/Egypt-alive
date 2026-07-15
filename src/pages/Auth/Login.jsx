@@ -62,99 +62,102 @@ export default function Login() {
 
   return (
     <section
-      className="min-h-screen bg-cover bg-center relative flex items-center justify-center px-5 py-10"
+      className="min-h-screen bg-cover bg-center relative flex items-center justify-center px-4 sm:px-6 py-8 sm:py-10"
       style={{ backgroundImage: `url(${bg})` }}
     >
       <div className="absolute inset-0 bg-black/70" />
 
-      <div className="relative z-10 w-full max-w-6xl rounded-3xl overflow-hidden backdrop-blur-lg border border-white/20 shadow-2xl grid lg:grid-cols-2">
-        <div className="hidden lg:flex flex-col justify-center p-14 text-white">
-          <img src={logo} className="w-28 mb-8" />
-          <h1 className="font-heading text-5xl text-primary mb-5">Egypt Alive</h1>
-          <p className="leading-8 text-white/80">
+      <div className="relative z-10 w-full max-w-5xl rounded-2xl sm:rounded-3xl overflow-hidden backdrop-blur-lg border border-white/20 shadow-2xl grid lg:grid-cols-2">
+        {/* Left Side - Branding (Desktop only) */}
+        <div className="hidden lg:flex flex-col justify-center p-10 xl:p-14 text-white">
+          <img src={logo} className="w-24 xl:w-28 mb-6 xl:mb-8" />
+          <h1 className="font-heading text-4xl xl:text-5xl text-primary mb-4 xl:mb-5">Egypt Alive</h1>
+          <p className="leading-7 xl:leading-8 text-white/80 text-sm xl:text-base">
             Experience timeless luxury travel through Egypt's magnificent history, breathtaking landscapes and unforgettable adventures.
           </p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-xl p-10">
-          <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-primary transition mb-8">
+        {/* Right Side - Form */}
+        <div className="bg-white/10 backdrop-blur-xl p-6 sm:p-8 md:p-10">
+          <Link to="/" className="inline-flex items-center gap-2 text-white/80 hover:text-primary transition text-sm mb-6 sm:mb-8">
             <FaArrowLeft /> Back to Home
           </Link>
 
-          <div className="lg:hidden flex justify-center mb-8">
-            <img src={logo} className="w-20" />
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex justify-center mb-6 sm:mb-8">
+            <img src={logo} className="w-16 sm:w-20" />
           </div>
 
-          <h2 className="font-heading text-4xl text-primary mb-2">Welcome Back</h2>
-          <p className="text-white/70 mb-8">Login to continue your journey</p>
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl text-primary mb-2">Welcome Back</h2>
+          <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8">Login to continue your journey</p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div>
-              <label className="text-white text-sm mb-2 block">Email</label>
-              <div className="flex items-center bg-white/10 border border-white/20 rounded-xl px-4">
-                <FaEnvelope className="text-primary" />
+              <label className="text-white text-sm mb-1.5 block">Email</label>
+              <div className="flex items-center bg-white/10 border border-white/20 rounded-xl px-3 sm:px-4">
+                <FaEnvelope className="text-primary text-sm" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Enter your email"
-                  className="flex-1 bg-transparent p-4 outline-none text-white placeholder:text-white/50"
+                  className="flex-1 bg-transparent py-3 sm:py-3.5 px-3 outline-none text-white text-sm placeholder:text-white/50"
                 />
               </div>
               <FormError message={errors.email} />
             </div>
 
             <div>
-              <label className="text-white text-sm mb-2 block">Password</label>
-              <div className="flex items-center bg-white/10 border border-white/20 rounded-xl px-4">
-                <FaLock className="text-primary" />
+              <label className="text-white text-sm mb-1.5 block">Password</label>
+              <div className="flex items-center bg-white/10 border border-white/20 rounded-xl px-3 sm:px-4">
+                <FaLock className="text-primary text-sm" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Password"
-                  className="flex-1 bg-transparent p-4 outline-none text-white placeholder:text-white/50"
+                  className="flex-1 bg-transparent py-3 sm:py-3.5 px-3 outline-none text-white text-sm placeholder:text-white/50"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <FaEyeSlash className="text-white/60" /> : <FaEye className="text-white/60" />}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="p-1">
+                  {showPassword ? <FaEyeSlash className="text-white/60 text-sm" /> : <FaEye className="text-white/60 text-sm" />}
                 </button>
               </div>
               <FormError message={errors.password} />
             </div>
 
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 text-sm">
               <label className="flex items-center gap-2 text-white/80">
-                <input type="checkbox" /> Remember me
+                <input type="checkbox" className="rounded" /> Remember me
               </label>
-              <button type="button" className="text-primary hover:underline">Forgot Password?</button>
+              <button type="button" className="text-primary hover:underline text-left sm:text-right">Forgot Password?</button>
             </div>
 
             <LoadingButton
               type="submit"
               loading={loading}
               loadingText="Logging in..."
-              className="w-full bg-primary text-black py-4 rounded-xl font-semibold hover:scale-[1.02]"
+              className="w-full bg-primary text-black py-3 sm:py-3.5 rounded-xl font-semibold hover:scale-[1.02] text-sm sm:text-base"
             >
               Login
             </LoadingButton>
           </form>
 
-          <div className="flex items-center gap-3 my-7">
+          <div className="flex items-center gap-3 my-5 sm:my-7">
             <div className="flex-1 h-px bg-white/20" />
-            <span className="text-white/50">OR</span>
+            <span className="text-white/50 text-xs sm:text-sm">OR</span>
             <div className="flex-1 h-px bg-white/20" />
           </div>
 
           <button
             type="button"
-            className="w-full bg-white text-black rounded-xl py-4 flex justify-center items-center gap-3 hover:bg-gray-100 transition"
+            className="w-full bg-white text-black rounded-xl py-3 sm:py-3.5 flex justify-center items-center gap-3 hover:bg-gray-100 transition text-sm sm:text-base"
           >
-            <FcGoogle size={24} /> Continue with Google
+            <FcGoogle size={20} /> Continue with Google
           </button>
 
-          <p className="text-center mt-8 text-white/80">
+          <p className="text-center mt-6 sm:mt-8 text-white/80 text-sm">
             Don't have an account?
             <Link to="/register" className="text-primary font-semibold ml-2">Register</Link>
           </p>
