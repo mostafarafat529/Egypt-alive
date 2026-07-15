@@ -4,7 +4,7 @@ import DataTable from "../../components/ui/DataTable";
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
+import { useToast } from "../../components/ui/Toast";
 import { FaSearch, FaFilter } from "react-icons/fa";
 
 export default function AdminBookings() {
@@ -13,7 +13,7 @@ export default function AdminBookings() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const { toasts, addToast, removeToast } = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
     setBookings(bookingService.getAll());
@@ -21,18 +21,18 @@ export default function AdminBookings() {
 
   function handleApprove(id) {
     setBookings(bookingService.updateStatus(id, "Confirmed"));
-    addToast("Booking confirmed.");
+    toast.success("Booking confirmed.");
   }
 
   function handleReject(id) {
     setBookings(bookingService.updateStatus(id, "Cancelled"));
-    addToast("Booking cancelled.");
+    toast.success("Booking cancelled.");
   }
 
   function handleDelete() {
     if (deleteTarget) {
       setBookings(bookingService.remove(deleteTarget.id));
-      addToast("Booking deleted.");
+      toast.success("Booking deleted.");
       setDeleteTarget(null);
     }
   }
@@ -50,9 +50,9 @@ export default function AdminBookings() {
     {
       label: "Customer",
       render: (row) => (
-        <div>
-          <p className="font-medium text-dark">{row.userName}</p>
-          <p className="text-xs text-gray-400">{row.email}</p>
+        <div className="min-w-[140px]">
+          <p className="font-medium text-dark truncate">{row.userName}</p>
+          <p className="text-xs text-gray-400 truncate">{row.email}</p>
         </div>
       ),
     },
@@ -71,7 +71,6 @@ export default function AdminBookings() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div>
         <h1 className="font-heading text-3xl text-primary mb-2">Manage Bookings</h1>
         <p className="text-cream/60">Track and manage all customer bookings.</p>
@@ -110,7 +109,7 @@ export default function AdminBookings() {
           <>
             <button
               onClick={() => setSelected(row)}
-              className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/20 transition"
+              className="text-xs bg-primary/10 text-primary px-2.5 py-1.5 rounded-lg hover:bg-primary/20 transition"
             >
               View
             </button>
@@ -118,13 +117,13 @@ export default function AdminBookings() {
               <>
                 <button
                   onClick={() => handleApprove(row.id)}
-                  className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 transition"
+                  className="text-xs bg-green-50 text-green-600 px-2.5 py-1.5 rounded-lg hover:bg-green-100 transition"
                 >
                   Approve
                 </button>
                 <button
                   onClick={() => handleReject(row.id)}
-                  className="text-xs bg-yellow-50 text-yellow-600 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition"
+                  className="text-xs bg-yellow-50 text-yellow-600 px-2.5 py-1.5 rounded-lg hover:bg-yellow-100 transition"
                 >
                   Reject
                 </button>
@@ -132,7 +131,7 @@ export default function AdminBookings() {
             )}
             <button
               onClick={() => setDeleteTarget(row)}
-              className="text-xs bg-red-50 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-100 transition"
+              className="text-xs bg-red-50 text-red-500 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition"
             >
               Delete
             </button>
@@ -143,7 +142,7 @@ export default function AdminBookings() {
       <Modal isOpen={!!selected} onClose={() => setSelected(null)} title="Booking Details">
         {selected && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-400">Customer</span>
                 <p className="text-dark font-medium">{selected.userName}</p>

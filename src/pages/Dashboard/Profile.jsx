@@ -1,12 +1,25 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
+import { useToast } from "../../components/ui/Toast";
+import LoadingButton from "../../components/ui/LoadingButton";
+import { FormError } from "../../components/ui/FormError";
 import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaIdBadge, FaEdit, FaSave, FaTimes } from "react-icons/fa";
+
+function validate(form) {
+  const errors = {};
+  if (!form.name.trim()) errors.name = "Name is required";
+  else if (form.name.trim().length < 3) errors.name = "Name must be at least 3 characters";
+  if (!form.email.trim()) errors.email = "Email is required";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = "Invalid email address";
+  return errors;
+}
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
-  const { toasts, addToast, removeToast } = useToast();
+  const { toast } = useToast();
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -14,37 +27,41 @@ export default function Profile() {
   });
 
   function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
   function handleSave() {
-    if (!form.name.trim() || !form.email.trim()) {
-      addToast("Name and email are required.", "error");
+    const validationErrors = validate(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fix the errors below.");
       return;
     }
-    updateProfile({
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-    });
-    setEditing(false);
-    addToast("Profile updated successfully.");
+    setLoading(true);
+    setTimeout(() => {
+      updateProfile({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+      });
+      setEditing(false);
+      setLoading(false);
+      toast.success("Profile updated successfully.");
+    }, 600);
   }
 
   function handleCancel() {
-    setForm({
-      name: user?.name || "",
-      email: user?.email || "",
-      phone: user?.phone || "",
-    });
+    setForm({ name: user?.name || "", email: user?.email || "", phone: user?.phone || "" });
     setEditing(false);
+    setErrors({});
   }
 
   const displayPhone = user?.phone || "Not set";
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div>
         <h1 className="font-heading text-3xl text-primary mb-2">Profile</h1>
         <p className="text-cream/60">View and update your personal information.</p>
@@ -73,8 +90,7 @@ export default function Profile() {
                 onClick={() => setEditing(true)}
                 className="flex items-center gap-2 text-sm text-primary hover:text-primary-light transition px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20"
               >
-                <FaEdit className="text-xs" />
-                Edit Profile
+                <FaEdit className="text-xs" /> Edit Profile
               </button>
             ) : (
               <div className="flex items-center gap-2">
@@ -82,16 +98,16 @@ export default function Profile() {
                   onClick={handleCancel}
                   className="flex items-center gap-2 text-sm text-cream/60 hover:text-cream transition px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10"
                 >
-                  <FaTimes className="text-xs" />
-                  Cancel
+                  <FaTimes className="text-xs" /> Cancel
                 </button>
-                <button
+                <LoadingButton
                   onClick={handleSave}
+                  loading={loading}
+                  loadingText="Saving..."
                   className="flex items-center gap-2 text-sm text-dark bg-primary hover:bg-primary-light transition px-4 py-2 rounded-lg font-semibold"
                 >
-                  <FaSave className="text-xs" />
-                  Save
-                </button>
+                  <FaSave className="text-xs" /> Save
+                </LoadingButton>
               </div>
             )}
           </div>
@@ -105,12 +121,15 @@ export default function Profile() {
                 <div className="flex-1">
                   <p className="text-cream/40 text-xs">Full Name</p>
                   {editing ? (
-                    <input
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-cream text-sm outline-none focus:border-primary transition mt-1"
-                    />
+                    <div>
+                      <input
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-cream text-sm outline-none focus:border-primary transition mt-1"
+                      />
+                      <FormError message={errors.name} />
+                    </div>
                   ) : (
                     <p className="text-cream text-sm font-medium">{user?.name}</p>
                   )}
@@ -123,13 +142,16 @@ export default function Profile() {
                 <div className="flex-1">
                   <p className="text-cream/40 text-xs">Email Address</p>
                   {editing ? (
-                    <input
-                      name="email"
-                      type="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-cream text-sm outline-none focus:border-primary transition mt-1"
-                    />
+                    <div>
+                      <input
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-cream text-sm outline-none focus:border-primary transition mt-1"
+                      />
+                      <FormError message={errors.email} />
+                    </div>
                   ) : (
                     <p className="text-cream text-sm font-medium">{user?.email}</p>
                   )}

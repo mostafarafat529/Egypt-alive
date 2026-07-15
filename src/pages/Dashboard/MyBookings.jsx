@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { bookingService } from "../../services/bookingService";
+import { useToast } from "../../components/ui/Toast";
+import EmptyState from "../../components/ui/EmptyState";
 import Badge from "../../components/ui/Badge";
 import ConfirmModal from "../../components/ui/ConfirmModal";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
 import { FaCalendar, FaUsers, FaSuitcase, FaStickyNote, FaBan } from "react-icons/fa";
 
 export default function MyBookings() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState("All");
   const [cancelTarget, setCancelTarget] = useState(null);
-  const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
     if (user?.email) {
@@ -19,16 +20,10 @@ export default function MyBookings() {
     }
   }, [user]);
 
-  function refresh() {
-    if (user?.email) {
-      setBookings(bookingService.getByUser(user.email));
-    }
-  }
-
   function handleCancel() {
     if (cancelTarget) {
       setBookings(bookingService.updateStatus(cancelTarget.id, "Cancelled"));
-      addToast("Booking cancelled successfully.");
+      toast.success("Booking cancelled successfully.");
       setCancelTarget(null);
     }
   }
@@ -38,7 +33,6 @@ export default function MyBookings() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div>
         <h1 className="font-heading text-3xl text-primary mb-2">My Bookings</h1>
         <p className="text-cream/60">View and manage your travel bookings.</p>
@@ -66,15 +60,14 @@ export default function MyBookings() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-white/5 rounded-2xl p-16 text-center">
-          <FaSuitcase className="text-5xl mx-auto mb-4 text-cream/15" />
-          <h3 className="font-heading text-xl text-cream/60 mb-2">
-            {filter === "All" ? "No bookings yet" : `No ${filter.toLowerCase()} bookings`}
-          </h3>
-          <p className="text-cream/40 text-sm">
-            {filter === "All" ? "Start planning your Egyptian adventure!" : "Try a different filter."}
-          </p>
-        </div>
+        <EmptyState
+          icon={FaSuitcase}
+          title={filter === "All" ? "No bookings yet" : `No ${filter.toLowerCase()} bookings`}
+          description={filter === "All" ? "Start planning your Egyptian adventure!" : "Try a different filter."}
+          action={filter === "All" ? "Browse Tours" : null}
+          onAction={filter === "All" ? () => window.location.href = "/tour-packages" : undefined}
+          variant="dashboard"
+        />
       ) : (
         <div className="grid md:grid-cols-2 gap-5">
           {filtered.map((booking) => (
@@ -123,8 +116,7 @@ export default function MyBookings() {
                     onClick={() => setCancelTarget(booking)}
                     className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition px-4 py-2 rounded-lg hover:bg-red-400/10 w-full justify-center"
                   >
-                    <FaBan className="text-xs" />
-                    Cancel Booking
+                    <FaBan className="text-xs" /> Cancel Booking
                   </button>
                 </div>
               )}

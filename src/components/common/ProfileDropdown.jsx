@@ -13,22 +13,31 @@ import {
   FaEnvelope,
   FaMapMarkedAlt,
   FaChevronDown,
+  FaPenFancy,
+  FaChartBar,
+  FaHeart,
+  FaBell,
 } from "react-icons/fa";
 
 const userMenu = [
   { to: ROUTES.DASHBOARD, label: "Dashboard", icon: FaTachometerAlt },
   { to: ROUTES.DASHBOARD_BOOKINGS, label: "My Bookings", icon: FaCalendarCheck },
+  { to: ROUTES.DASHBOARD_FAVORITES, label: "Favorites", icon: FaHeart },
   { to: ROUTES.DASHBOARD_PROFILE, label: "Profile", icon: FaUser },
+  { to: ROUTES.DASHBOARD_NOTIFICATIONS, label: "Notifications", icon: FaBell },
   { to: ROUTES.DASHBOARD_SETTINGS, label: "Settings", icon: FaCog },
 ];
 
 const adminMenu = [
   { to: ROUTES.ADMIN, label: "Admin Dashboard", icon: FaTachometerAlt },
   { to: ROUTES.ADMIN_USERS, label: "Users", icon: FaUsers },
-  { to: ROUTES.ADMIN_BOOKINGS, label: "Bookings", icon: FaCalendarCheck },
   { to: ROUTES.ADMIN_TOURS, label: "Tours", icon: FaSuitcase },
+  { to: ROUTES.ADMIN_BOOKINGS, label: "Bookings", icon: FaCalendarCheck },
   { to: ROUTES.ADMIN_DESTINATIONS, label: "Destinations", icon: FaMapMarkedAlt },
+  { to: ROUTES.ADMIN_BLOG, label: "Blog", icon: FaPenFancy },
   { to: ROUTES.ADMIN_MESSAGES, label: "Messages", icon: FaEnvelope },
+  { to: ROUTES.ADMIN_ANALYTICS, label: "Analytics", icon: FaChartBar },
+  { to: ROUTES.ADMIN_SETTINGS, label: "Settings", icon: FaCog },
 ];
 
 export default function ProfileDropdown({ onCloseMobile }) {
@@ -90,7 +99,7 @@ export default function ProfileDropdown({ onCloseMobile }) {
 
       {/* Dropdown Menu */}
       <div
-        className={`absolute right-0 top-full mt-2 w-56 bg-[#11100C] border border-white/10 rounded-xl shadow-2xl overflow-hidden transition-all duration-200 origin-top-right ${
+        className={`absolute right-0 top-full mt-2 w-64 bg-[#11100C] border border-white/10 rounded-xl shadow-2xl overflow-hidden transition-all duration-200 origin-top-right ${
           open
             ? "opacity-100 scale-100 pointer-events-auto"
             : "opacity-0 scale-95 pointer-events-none"
@@ -98,12 +107,26 @@ export default function ProfileDropdown({ onCloseMobile }) {
       >
         {/* User Info Header */}
         <div className="px-4 py-3 border-b border-white/10">
-          <p className="text-white text-sm font-semibold truncate">{user?.name}</p>
-          <p className="text-cream/50 text-xs truncate">{user?.email}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
+              {initial}
+            </div>
+            <div className="min-w-0">
+              <p className="text-white text-sm font-semibold truncate">{user?.name}</p>
+              <p className="text-cream/50 text-xs truncate">{user?.email}</p>
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+              isAdmin ? "bg-primary/20 text-primary" : "bg-blue-500/20 text-blue-400"
+            }`}>
+              {user?.role === "admin" ? "Administrator" : "Member"}
+            </span>
+          </div>
         </div>
 
         {/* Menu Items */}
-        <div className="py-1">
+        <div className="py-1 max-h-[300px] overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (

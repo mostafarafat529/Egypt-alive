@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 export default function TourCard({ id, image, title, subtitle, duration, people, price, rating, reviewCount }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 group">
+    <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 group flex flex-col h-full">
 
       {/* Image */}
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-52 sm:h-64 overflow-hidden flex-shrink-0">
         <img
           src={image}
           alt={title}
@@ -22,7 +22,7 @@ export default function TourCard({ id, image, title, subtitle, duration, people,
         )}
       </div>
 
-      <div className="p-6">
+      <div className="p-5 sm:p-6 flex flex-col flex-1">
 
         {subtitle && (
           <p className="text-primary text-xs font-semibold uppercase tracking-[2px] mb-2">
@@ -30,28 +30,24 @@ export default function TourCard({ id, image, title, subtitle, duration, people,
           </p>
         )}
 
-        <h3 className="font-heading text-2xl text-dark mb-4 group-hover:text-primary transition-colors">
+        <h3 className="font-heading text-xl sm:text-2xl text-dark mb-3 sm:mb-4 group-hover:text-primary transition-colors line-clamp-2">
           {title}
         </h3>
 
-        <div className="flex justify-between text-gray-500 text-sm mb-5">
-
+        <div className="flex justify-between text-gray-500 text-sm mb-4 sm:mb-5">
           <span className="flex items-center gap-2">
             <FaClock className="text-primary" />
             {duration}
           </span>
-
           <span className="flex items-center gap-2">
             <FaUsers className="text-primary" />
             {people}
           </span>
-
         </div>
 
-        <div className="flex justify-between items-center border-t border-gray-100 pt-4">
-
+        <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
           <div>
-            <span className="text-primary text-2xl font-bold">
+            <span className="text-primary text-xl sm:text-2xl font-bold">
               {price}
             </span>
             <span className="text-gray-400 text-xs ml-1">/ person</span>
@@ -59,11 +55,10 @@ export default function TourCard({ id, image, title, subtitle, duration, people,
 
           <Link
             to={`/tour-packages/${id}`}
-            className="bg-primary text-dark px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-primary-dark hover:scale-105 transition-all duration-200"
+            className="bg-primary text-dark px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm hover:bg-primary-dark hover:scale-105 transition-all duration-200"
           >
             View Details
           </Link>
-
         </div>
 
       </div>

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { FaSave, FaBuilding } from "react-icons/fa";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
+import { useToast } from "../../components/ui/Toast";
+import { FormError, inputClassDark } from "../../components/ui/FormError";
 
 const SETTINGS_KEY = "ea_admin_settings";
 const defaults = { siteName: "Egypt Alive", siteEmail: "info@egyptalive.com", siteUrl: "https://egyptalive.com" };
@@ -13,26 +14,42 @@ function loadSettings() {
   return defaults;
 }
 
+function validate(settings) {
+  const errors = {};
+  if (!settings.siteName.trim()) errors.siteName = "Site name is required";
+  else if (settings.siteName.trim().length < 2) errors.siteName = "Site name must be at least 2 characters";
+  if (!settings.siteEmail.trim()) errors.siteEmail = "Email is required";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.siteEmail.trim())) errors.siteEmail = "Invalid email address";
+  if (settings.siteUrl.trim() && !/^https?:\/\/.+/.test(settings.siteUrl.trim())) errors.siteUrl = "URL must start with http:// or https://";
+  return errors;
+}
+
 export default function AdminSettings() {
   const [settings, setSettings] = useState(loadSettings);
-  const { toasts, addToast, removeToast } = useToast();
+  const [errors, setErrors] = useState({});
+  const { toast } = useToast();
+  const siteNameRef = useRef(null);
 
   function handleChange(e) {
-    setSettings((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setSettings((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
   function handleSave() {
-    if (!settings.siteName.trim() || !settings.siteEmail.trim()) {
-      addToast("Site name and email are required.", "error");
+    const validationErrors = validate(settings);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fix the errors below.");
+      siteNameRef.current?.focus();
       return;
     }
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    addToast("Settings updated successfully.");
+    toast.success("Settings updated successfully.");
   }
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div>
         <h1 className="font-heading text-3xl text-primary mb-2">Admin Settings</h1>
         <p className="text-cream/60">Configure platform settings and preferences.</p>
@@ -50,24 +67,27 @@ export default function AdminSettings() {
         </div>
         <div className="space-y-4 max-w-lg">
           <div>
-            <label className="block text-sm font-medium text-cream/70 mb-1.5">Site Name</label>
+            <label className="block text-sm font-medium text-cream/70 mb-1.5">Site Name *</label>
             <input
+              ref={siteNameRef}
               type="text"
               name="siteName"
               value={settings.siteName}
               onChange={handleChange}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-cream placeholder-cream/30 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              className={inputClassDark("siteName", errors)}
             />
+            <FormError message={errors.siteName} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-cream/70 mb-1.5">Contact Email</label>
+            <label className="block text-sm font-medium text-cream/70 mb-1.5">Contact Email *</label>
             <input
               type="email"
               name="siteEmail"
               value={settings.siteEmail}
               onChange={handleChange}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-cream placeholder-cream/30 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              className={inputClassDark("siteEmail", errors)}
             />
+            <FormError message={errors.siteEmail} />
           </div>
           <div>
             <label className="block text-sm font-medium text-cream/70 mb-1.5">Site URL</label>
@@ -76,8 +96,9 @@ export default function AdminSettings() {
               name="siteUrl"
               value={settings.siteUrl}
               onChange={handleChange}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-cream placeholder-cream/30 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+              className={inputClassDark("siteUrl", errors)}
             />
+            <FormError message={errors.siteUrl} />
           </div>
           <button
             onClick={handleSave}

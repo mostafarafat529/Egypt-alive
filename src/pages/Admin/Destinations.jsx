@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useData } from "../../context/DataContext";
 import FormModal from "../../components/ui/FormModal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
+import { useToast } from "../../components/ui/Toast";
+import { FormError, inputClass } from "../../components/ui/FormError";
 import { FaSearch, FaEdit, FaTrash, FaPlus, FaMapMarkerAlt } from "react-icons/fa";
 
 const emptyForm = { title: "", label: "", description: "", image: "", className: "h-[300px]" };
+
+function validate(form) {
+  const errors = {};
+  if (!form.title.trim()) errors.title = "Title is required";
+  else if (form.title.trim().length < 2) errors.title = "Title must be at least 2 characters";
+  if (form.image.trim() && !/^https?:\/\/.+/.test(form.image.trim())) errors.image = "Image must be a valid URL";
+  return errors;
+}
 
 export default function AdminDestinations() {
   const { destinations, updateDestinations } = useData();
@@ -13,8 +22,10 @@ export default function AdminDestinations() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const { toasts, addToast, removeToast } = useToast();
+  const { toast } = useToast();
+  const titleRef = useRef(null);
 
   const filtered = destinations.filter((d) =>
     d.title?.toLowerCase().includes(search.toLowerCase())
@@ -23,48 +34,57 @@ export default function AdminDestinations() {
   function openAdd() {
     setEditing(null);
     setForm(emptyForm);
+    setErrors({});
     setShowForm(true);
+    setTimeout(() => titleRef.current?.focus(), 100);
   }
 
   function openEdit(dest) {
     setEditing(dest);
     setForm({ title: dest.title, label: dest.label || "", description: dest.description || dest.quote || "", image: dest.image || "", className: dest.className || "h-[300px]" });
+    setErrors({});
     setShowForm(true);
+    setTimeout(() => titleRef.current?.focus(), 100);
   }
 
   function handleSave() {
-    if (!form.title.trim()) {
-      addToast("Please enter a destination title.", "error");
+    const validationErrors = validate(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fix the errors below.");
+      titleRef.current?.focus();
       return;
     }
     if (editing) {
       updateDestinations((prev) => prev.map((d) => d.id === editing.id ? { ...d, ...form } : d));
-      addToast("Destination updated successfully.");
+      toast.success("Destination updated successfully.");
     } else {
       const newDest = { id: Date.now(), ...form };
       updateDestinations((prev) => [...prev, newDest]);
-      addToast("Destination created successfully.");
+      toast.success("Destination created successfully.");
     }
     setShowForm(false);
     setEditing(null);
     setForm(emptyForm);
+    setErrors({});
   }
 
   function handleDelete() {
     if (deleteTarget) {
       updateDestinations((prev) => prev.filter((d) => d.id !== deleteTarget.id));
-      addToast("Destination deleted.");
+      toast.success("Destination deleted.");
       setDeleteTarget(null);
     }
   }
 
   function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-heading text-3xl text-primary mb-2">Manage Destinations</h1>
@@ -135,28 +155,30 @@ export default function AdminDestinations() {
 
       <FormModal
         isOpen={showForm}
-        onClose={() => { setShowForm(false); setEditing(null); }}
+        onClose={() => { setShowForm(false); setEditing(null); setErrors({}); }}
         title={editing ? "Edit Destination" : "Add New Destination"}
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-            <input name="title" value={form.title} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="e.g. Cairo" />
+            <input ref={titleRef} name="title" value={form.title} onChange={handleChange} className={inputClass("title", errors)} placeholder="e.g. Cairo" />
+            <FormError message={errors.title} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Label</label>
-            <input name="label" value={form.label} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="e.g. Lower Egypt" />
+            <input name="label" value={form.label} onChange={handleChange} className={inputClass("label", errors)} placeholder="e.g. Lower Egypt" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition resize-none" placeholder="Describe this destination..." />
+            <textarea name="description" value={form.description} onChange={handleChange} rows={3} className={`${inputClass("description", errors)} resize-none`} placeholder="Describe this destination..." />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-            <input name="image" value={form.image} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="https://..." />
+            <input name="image" value={form.image} onChange={handleChange} className={inputClass("image", errors)} placeholder="https://..." />
+            <FormError message={errors.image} />
           </div>
-          <div className="flex justify-end gap-3 pt-4">
-            <button onClick={() => { setShowForm(false); setEditing(null); }} className="px-5 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition">Cancel</button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
+            <button onClick={() => { setShowForm(false); setEditing(null); setErrors({}); }} className="px-5 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition">Cancel</button>
             <button onClick={handleSave} className="px-6 py-3 rounded-xl bg-primary text-dark text-sm font-semibold hover:scale-105 transition-all duration-200 shadow-lg shadow-primary/20">
               {editing ? "Save Changes" : "Create Destination"}
             </button>

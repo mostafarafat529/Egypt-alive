@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useData } from "../../context/DataContext";
 import FormModal from "../../components/ui/FormModal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
+import { useToast } from "../../components/ui/Toast";
+import { FormError, inputClass } from "../../components/ui/FormError";
 import { FaSearch, FaEdit, FaTrash, FaPlus, FaClock, FaUsers } from "react-icons/fa";
 
 const emptyForm = { title: "", subtitle: "", image: "", duration: "", people: "", price: "" };
+
+function validate(form) {
+  const errors = {};
+  if (!form.title.trim()) errors.title = "Title is required";
+  else if (form.title.trim().length < 3) errors.title = "Title must be at least 3 characters";
+  if (!form.duration.trim()) errors.duration = "Duration is required";
+  if (!form.price.trim()) errors.price = "Price is required";
+  else if (!/^\$?\d+/.test(form.price.trim())) errors.price = "Price must be a valid amount (e.g. $420)";
+  if (form.image.trim() && !/^https?:\/\/.+/.test(form.image.trim())) errors.image = "Image must be a valid URL";
+  return errors;
+}
 
 export default function AdminTours() {
   const { tours, updateTours } = useData();
@@ -13,8 +25,10 @@ export default function AdminTours() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const { toasts, addToast, removeToast } = useToast();
+  const { toast } = useToast();
+  const titleRef = useRef(null);
 
   const filtered = tours.filter((t) =>
     t.title?.toLowerCase().includes(search.toLowerCase())
@@ -23,48 +37,57 @@ export default function AdminTours() {
   function openAdd() {
     setEditing(null);
     setForm(emptyForm);
+    setErrors({});
     setShowForm(true);
+    setTimeout(() => titleRef.current?.focus(), 100);
   }
 
   function openEdit(tour) {
     setEditing(tour);
     setForm({ title: tour.title, subtitle: tour.subtitle || "", image: tour.image || "", duration: tour.duration, people: tour.people, price: tour.price });
+    setErrors({});
     setShowForm(true);
+    setTimeout(() => titleRef.current?.focus(), 100);
   }
 
   function handleSave() {
-    if (!form.title.trim() || !form.duration.trim() || !form.price.trim()) {
-      addToast("Please fill in title, duration, and price.", "error");
+    const validationErrors = validate(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fix the errors below.");
+      titleRef.current?.focus();
       return;
     }
     if (editing) {
       updateTours((prev) => prev.map((t) => t.id === editing.id ? { ...t, ...form } : t));
-      addToast("Tour updated successfully.");
+      toast.success("Tour updated successfully.");
     } else {
       const newTour = { id: Date.now(), ...form, rating: 4.5, reviewCount: 0 };
       updateTours((prev) => [...prev, newTour]);
-      addToast("Tour created successfully.");
+      toast.success("Tour created successfully.");
     }
     setShowForm(false);
     setEditing(null);
     setForm(emptyForm);
+    setErrors({});
   }
 
   function handleDelete() {
     if (deleteTarget) {
       updateTours((prev) => prev.filter((t) => t.id !== deleteTarget.id));
-      addToast("Tour deleted.");
+      toast.success("Tour deleted.");
       setDeleteTarget(null);
     }
   }
 
   function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-heading text-3xl text-primary mb-2">Manage Tours</h1>
@@ -142,38 +165,42 @@ export default function AdminTours() {
 
       <FormModal
         isOpen={showForm}
-        onClose={() => { setShowForm(false); setEditing(null); }}
+        onClose={() => { setShowForm(false); setEditing(null); setErrors({}); }}
         title={editing ? "Edit Tour" : "Add New Tour"}
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-            <input name="title" value={form.title} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="e.g. Classic Cairo" />
+            <input ref={titleRef} name="title" value={form.title} onChange={handleChange} className={inputClass("title", errors)} placeholder="e.g. Classic Cairo" />
+            <FormError message={errors.title} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
-            <input name="subtitle" value={form.subtitle} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="e.g. Pyramids, Museums & Bazaars" />
+            <input name="subtitle" value={form.subtitle} onChange={handleChange} className={inputClass("subtitle", errors)} placeholder="e.g. Pyramids, Museums & Bazaars" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-            <input name="image" value={form.image} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="https://..." />
+            <input name="image" value={form.image} onChange={handleChange} className={inputClass("image", errors)} placeholder="https://..." />
+            <FormError message={errors.image} />
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Duration *</label>
-              <input name="duration" value={form.duration} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="3 Days" />
+              <input name="duration" value={form.duration} onChange={handleChange} className={inputClass("duration", errors)} placeholder="3 Days" />
+              <FormError message={errors.duration} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">People</label>
-              <input name="people" value={form.people} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="2-8" />
+              <input name="people" value={form.people} onChange={handleChange} className={inputClass("people", errors)} placeholder="2-8" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
-              <input name="price" value={form.price} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="$420" />
+              <input name="price" value={form.price} onChange={handleChange} className={inputClass("price", errors)} placeholder="$420" />
+              <FormError message={errors.price} />
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4">
-            <button onClick={() => { setShowForm(false); setEditing(null); }} className="px-5 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition">Cancel</button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
+            <button onClick={() => { setShowForm(false); setEditing(null); setErrors({}); }} className="px-5 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition">Cancel</button>
             <button onClick={handleSave} className="px-6 py-3 rounded-xl bg-primary text-dark text-sm font-semibold hover:scale-105 transition-all duration-200 shadow-lg shadow-primary/20">
               {editing ? "Save Changes" : "Create Tour"}
             </button>

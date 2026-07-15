@@ -4,7 +4,7 @@ import DataTable from "../../components/ui/DataTable";
 import Badge from "../../components/ui/Badge";
 import Modal from "../../components/ui/Modal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
+import { useToast } from "../../components/ui/Toast";
 import { FaSearch } from "react-icons/fa";
 
 export default function AdminMessages() {
@@ -12,7 +12,7 @@ export default function AdminMessages() {
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const { toasts, addToast, removeToast } = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
     setMessages(messageService.getAll());
@@ -25,7 +25,7 @@ export default function AdminMessages() {
   function handleDelete() {
     if (deleteTarget) {
       setMessages(messageService.remove(deleteTarget.id));
-      addToast("Message deleted.");
+      toast.success("Message deleted.");
       setDeleteTarget(null);
     }
   }
@@ -43,10 +43,20 @@ export default function AdminMessages() {
   );
 
   const columns = [
-    { label: "Name", key: "name" },
+    {
+      label: "Name",
+      key: "name",
+      render: (row) => <span className="font-medium text-dark truncate block max-w-[120px]">{row.name}</span>,
+    },
     { label: "Phone", key: "phone" },
-    { label: "Email", key: "email" },
-    { label: "Subject", key: "subject" },
+    {
+      label: "Email",
+      render: (row) => <span className="truncate block max-w-[160px]">{row.email}</span>,
+    },
+    {
+      label: "Subject",
+      render: (row) => <span className="truncate block max-w-[140px]">{row.subject}</span>,
+    },
     {
       label: "Status",
       render: (row) => <Badge status={row.status} />,
@@ -59,7 +69,6 @@ export default function AdminMessages() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div>
         <h1 className="font-heading text-3xl text-primary mb-2">Messages</h1>
         <p className="text-cream/60">View and respond to customer messages.</p>
@@ -83,21 +92,21 @@ export default function AdminMessages() {
           <>
             <button
               onClick={() => handleView(row)}
-              className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/20 transition"
+              className="text-xs bg-primary/10 text-primary px-2.5 py-1.5 rounded-lg hover:bg-primary/20 transition"
             >
               View
             </button>
             {row.status === "New" && (
               <button
-                onClick={() => { handleRead(row.id); addToast("Marked as read."); }}
-                className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition"
+                onClick={() => { handleRead(row.id); toast.success("Marked as read."); }}
+                className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 transition"
               >
-                Mark Read
+                Read
               </button>
             )}
             <button
               onClick={() => setDeleteTarget(row)}
-              className="text-xs bg-red-50 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-100 transition"
+              className="text-xs bg-red-50 text-red-500 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition"
             >
               Delete
             </button>
@@ -108,7 +117,7 @@ export default function AdminMessages() {
       <Modal isOpen={!!selected} onClose={() => setSelected(null)} title="Message Details">
         {selected && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-400">From</span>
                 <p className="text-dark font-medium">{selected.name}</p>

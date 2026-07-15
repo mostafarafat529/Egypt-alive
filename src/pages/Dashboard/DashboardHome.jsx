@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { bookingService } from "../../services/bookingService";
+import EmptyState from "../../components/ui/EmptyState";
 import Badge from "../../components/ui/Badge";
 import { FaCalendarCheck, FaHeart, FaSuitcase, FaBell } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +33,6 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Welcome Card */}
       <div className="bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/20 rounded-2xl p-8">
         <h1 className="font-heading text-3xl text-cream mb-2">
           Welcome back, {user?.name?.split(" ")[0]}!
@@ -42,7 +42,6 @@ export default function DashboardHome() {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -60,22 +59,22 @@ export default function DashboardHome() {
         })}
       </div>
 
-      {/* Recent Bookings */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-heading text-xl text-cream">Recent Bookings</h2>
-          <button
-            onClick={() => navigate(ROUTES.DASHBOARD_BOOKINGS)}
-            className="text-sm text-primary hover:text-primary-light transition"
-          >
+          <button onClick={() => navigate(ROUTES.DASHBOARD_BOOKINGS)} className="text-sm text-primary hover:text-primary-light transition">
             View All
           </button>
         </div>
         {recentBookings.length === 0 ? (
-          <div className="bg-white/5 rounded-xl p-10 text-center text-cream/40">
-            <FaSuitcase className="text-4xl mx-auto mb-4 text-cream/20" />
-            <p>No bookings yet. Start planning your trip!</p>
-          </div>
+          <EmptyState
+            icon={FaSuitcase}
+            title="No bookings yet"
+            description="Start planning your trip!"
+            action="Browse Tours"
+            onAction={() => navigate(ROUTES.TOUR_PACKAGES)}
+            variant="dashboard"
+          />
         ) : (
           <div className="space-y-3">
             {recentBookings.map((booking) => (
@@ -98,28 +97,18 @@ export default function DashboardHome() {
         )}
       </div>
 
-      {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-4">
-        <button
-          onClick={() => navigate(ROUTES.TOUR_PACKAGES)}
-          className="bg-white/5 border border-white/10 rounded-xl p-5 text-left hover:border-primary/30 hover:bg-white/[0.07] transition-all duration-200 group"
-        >
+        <button onClick={() => navigate(ROUTES.TOUR_PACKAGES)} className="bg-white/5 border border-white/10 rounded-xl p-5 text-left hover:border-primary/30 hover:bg-white/[0.07] transition-all duration-200 group">
           <FaSuitcase className="text-primary text-xl mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="font-medium text-cream text-sm">Browse Tours</h3>
           <p className="text-cream/40 text-xs mt-1">Find your next adventure</p>
         </button>
-        <button
-          onClick={() => navigate(ROUTES.DASHBOARD_BOOKINGS)}
-          className="bg-white/5 border border-white/10 rounded-xl p-5 text-left hover:border-primary/30 hover:bg-white/[0.07] transition-all duration-200 group"
-        >
+        <button onClick={() => navigate(ROUTES.DASHBOARD_BOOKINGS)} className="bg-white/5 border border-white/10 rounded-xl p-5 text-left hover:border-primary/30 hover:bg-white/[0.07] transition-all duration-200 group">
           <FaCalendarCheck className="text-primary text-xl mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="font-medium text-cream text-sm">My Bookings</h3>
           <p className="text-cream/40 text-xs mt-1">Manage your reservations</p>
         </button>
-        <button
-          onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)}
-          className="bg-white/5 border border-white/10 rounded-xl p-5 text-left hover:border-primary/30 hover:bg-white/[0.07] transition-all duration-200 group"
-        >
+        <button onClick={() => navigate(ROUTES.DASHBOARD_PROFILE)} className="bg-white/5 border border-white/10 rounded-xl p-5 text-left hover:border-primary/30 hover:bg-white/[0.07] transition-all duration-200 group">
           <FaHeart className="text-primary text-xl mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="font-medium text-cream text-sm">Edit Profile</h3>
           <p className="text-cream/40 text-xs mt-1">Update your information</p>

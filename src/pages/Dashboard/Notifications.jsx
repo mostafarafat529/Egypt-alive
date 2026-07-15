@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useToast } from "../../components/ui/Toast";
+import EmptyState from "../../components/ui/EmptyState";
 import { FaBell, FaCheck, FaTrash, FaCalendarCheck, FaEnvelope, FaHeart } from "react-icons/fa";
 
 const initialNotifications = [
@@ -36,19 +38,20 @@ const initialNotifications = [
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState(initialNotifications);
+  const { toast } = useToast();
 
   function markAsRead(id) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   }
 
   function markAllRead() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    toast.success("All notifications marked as read.");
   }
 
   function handleDelete(id) {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+    toast.info("Notification deleted.");
   }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -60,11 +63,7 @@ export default function Notifications() {
           <h1 className="font-heading text-3xl text-primary mb-2">Notifications</h1>
           <p className="text-cream/60">
             Stay updated with your latest activity.
-            {unreadCount > 0 && (
-              <span className="ml-2 text-primary font-medium">
-                {unreadCount} unread
-              </span>
-            )}
+            {unreadCount > 0 && <span className="ml-2 text-primary font-medium">{unreadCount} unread</span>}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -72,18 +71,18 @@ export default function Notifications() {
             onClick={markAllRead}
             className="text-sm text-cream/50 hover:text-cream transition flex items-center gap-2"
           >
-            <FaCheck className="text-xs" />
-            Mark all read
+            <FaCheck className="text-xs" /> Mark all read
           </button>
         )}
       </div>
 
       {notifications.length === 0 ? (
-        <div className="bg-white/5 rounded-2xl p-16 text-center">
-          <FaBell className="text-5xl mx-auto mb-4 text-cream/15" />
-          <h3 className="font-heading text-xl text-cream/60 mb-2">All caught up!</h3>
-          <p className="text-cream/40 text-sm">No new notifications.</p>
-        </div>
+        <EmptyState
+          icon={FaBell}
+          title="All caught up!"
+          description="No new notifications."
+          variant="dashboard"
+        />
       ) : (
         <div className="space-y-3">
           {notifications.map((notif) => {
@@ -92,9 +91,7 @@ export default function Notifications() {
               <div
                 key={notif.id}
                 className={`border rounded-xl p-5 flex items-start gap-4 transition-all duration-200 hover:border-primary/30 ${
-                  notif.read
-                    ? "bg-white/5 border-white/10"
-                    : "bg-primary/5 border-primary/20"
+                  notif.read ? "bg-white/5 border-white/10" : "bg-primary/5 border-primary/20"
                 }`}
               >
                 <div className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 ${notif.color}`}>
@@ -103,9 +100,7 @@ export default function Notifications() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-cream text-sm">{notif.title}</h3>
-                    {!notif.read && (
-                      <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                    )}
+                    {!notif.read && <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                   </div>
                   <p className="text-cream/50 text-sm mt-1">{notif.message}</p>
                   <p className="text-cream/30 text-xs mt-2">{notif.time}</p>
@@ -113,7 +108,7 @@ export default function Notifications() {
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {!notif.read && (
                     <button
-                      onClick={() => markAsRead(notif.id)}
+                      onClick={() => { markAsRead(notif.id); toast.success("Marked as read."); }}
                       className="text-cream/30 hover:text-primary transition p-2 rounded-lg hover:bg-white/5"
                       title="Mark as read"
                     >

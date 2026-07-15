@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { NavLink, Link } from "react-router-dom";
-import { FaBars, FaTimes, FaTachometerAlt, FaCalendarCheck, FaUser, FaCog, FaSignOutAlt, FaUsers, FaSuitcase, FaEnvelope, FaMapMarkedAlt } from "react-icons/fa";
+import { FaBars, FaTimes, FaTachometerAlt, FaCalendarCheck, FaUser, FaCog, FaSignOutAlt, FaUsers, FaSuitcase, FaEnvelope, FaMapMarkedAlt, FaHeart, FaBell } from "react-icons/fa";
 import { ROUTES } from "../../config/routes";
 
 import logo from "../../assets/logo/8bde5eb281dd3d316ed5b7cd4b93d99efeee103b (1).png";
@@ -18,15 +18,17 @@ const navLinks = [
 const userDashboardLinks = [
   { to: ROUTES.DASHBOARD, label: "Dashboard", icon: FaTachometerAlt },
   { to: ROUTES.DASHBOARD_BOOKINGS, label: "My Bookings", icon: FaCalendarCheck },
+  { to: ROUTES.DASHBOARD_FAVORITES, label: "Favorites", icon: FaHeart },
   { to: ROUTES.DASHBOARD_PROFILE, label: "Profile", icon: FaUser },
+  { to: ROUTES.DASHBOARD_NOTIFICATIONS, label: "Notifications", icon: FaBell },
   { to: ROUTES.DASHBOARD_SETTINGS, label: "Settings", icon: FaCog },
 ];
 
 const adminDashboardLinks = [
   { to: ROUTES.ADMIN, label: "Admin Dashboard", icon: FaTachometerAlt },
   { to: ROUTES.ADMIN_USERS, label: "Users", icon: FaUsers },
-  { to: ROUTES.ADMIN_BOOKINGS, label: "Bookings", icon: FaCalendarCheck },
   { to: ROUTES.ADMIN_TOURS, label: "Tours", icon: FaSuitcase },
+  { to: ROUTES.ADMIN_BOOKINGS, label: "Bookings", icon: FaCalendarCheck },
   { to: ROUTES.ADMIN_DESTINATIONS, label: "Destinations", icon: FaMapMarkedAlt },
   { to: ROUTES.ADMIN_MESSAGES, label: "Messages", icon: FaEnvelope },
 ];
@@ -36,6 +38,7 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
 
   const dashboardLinks = user?.role === "admin" ? adminDashboardLinks : userDashboardLinks;
+  const dashboardBase = user?.role === "admin" ? ROUTES.ADMIN : ROUTES.DASHBOARD;
 
   function handleMobileLogout() {
     logout();
@@ -82,7 +85,16 @@ export default function Navbar() {
         <div className="hidden lg:flex items-center gap-3">
 
           {isAuthenticated ? (
-            <ProfileDropdown />
+            <>
+              <Link
+                to={dashboardBase}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-primary/40 text-primary text-sm font-medium hover:bg-primary hover:text-black transition-all duration-300"
+              >
+                <FaTachometerAlt className="text-xs" />
+                Dashboard
+              </Link>
+              <ProfileDropdown />
+            </>
           ) : (
             <>
               <Link
@@ -115,7 +127,7 @@ export default function Navbar() {
       {/* Mobile Menu */}
       <div
         className={`lg:hidden bg-black/95 backdrop-blur-md overflow-hidden transition-all duration-300 ${
-          isOpen ? "max-h-[500px] py-5" : "max-h-0"
+          isOpen ? "max-h-[600px] py-5" : "max-h-0"
         }`}
       >
         <nav className="flex flex-col items-center gap-4">
@@ -136,6 +148,17 @@ export default function Navbar() {
 
           {isAuthenticated && (
             <>
+              <div className="w-10 h-px bg-white/10 my-1" />
+
+              <Link
+                to={dashboardBase}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 text-sm text-primary font-semibold"
+              >
+                <FaTachometerAlt className="text-xs" />
+                Go to Dashboard
+              </Link>
+
               <div className="w-10 h-px bg-white/10 my-1" />
 
               {dashboardLinks.map((link) => {

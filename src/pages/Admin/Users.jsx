@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { userService } from "../../services/userService";
 import DataTable from "../../components/ui/DataTable";
 import FormModal from "../../components/ui/FormModal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
-import ToastContainer, { useToast } from "../../components/ui/Toast";
+import { useToast } from "../../components/ui/Toast";
+import { FormError, inputClass } from "../../components/ui/FormError";
 import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 
 const roleStyles = {
@@ -13,14 +14,27 @@ const roleStyles = {
 
 const emptyForm = { name: "", email: "", password: "", role: "user" };
 
+function validate(form, isEditing) {
+  const errors = {};
+  if (!form.name.trim()) errors.name = "Name is required";
+  else if (form.name.trim().length < 3) errors.name = "Name must be at least 3 characters";
+  if (!form.email.trim()) errors.email = "Email is required";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = "Invalid email address";
+  if (!isEditing && !form.password.trim()) errors.password = "Password is required for new users";
+  else if (form.password.trim() && form.password.length < 6) errors.password = "Password must be at least 6 characters";
+  return errors;
+}
+
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const { toasts, addToast, removeToast } = useToast();
+  const { toast } = useToast();
+  const nameRef = useRef(null);
 
   useEffect(() => {
     setUsers(userService.getAll());
@@ -36,46 +50,52 @@ export default function AdminUsers() {
   function openAdd() {
     setEditing(null);
     setForm(emptyForm);
+    setErrors({});
     setShowForm(true);
+    setTimeout(() => nameRef.current?.focus(), 100);
   }
 
   function openEdit(user) {
     setEditing(user);
     setForm({ name: user.name, email: user.email, password: user.password || "", role: user.role });
+    setErrors({});
     setShowForm(true);
+    setTimeout(() => nameRef.current?.focus(), 100);
   }
 
   function handleSave() {
-    if (!form.name.trim() || !form.email.trim()) {
-      addToast("Please fill in name and email.", "error");
-      return;
-    }
-    if (!editing && !form.password.trim()) {
-      addToast("Password is required for new users.", "error");
+    const validationErrors = validate(form, !!editing);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fix the errors below.");
+      nameRef.current?.focus();
       return;
     }
     if (editing) {
       setUsers(userService.update(editing.id, form));
-      addToast("User updated successfully.");
+      toast.success("User updated successfully.");
     } else {
       setUsers(userService.create(form));
-      addToast("User created successfully.");
+      toast.success("User created successfully.");
     }
     setShowForm(false);
     setEditing(null);
     setForm(emptyForm);
+    setErrors({});
   }
 
   function handleDelete() {
     if (deleteTarget) {
       setUsers(userService.remove(deleteTarget.id));
-      addToast("User deleted.");
+      toast.success("User deleted.");
       setDeleteTarget(null);
     }
   }
 
   function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
   const columns = [
@@ -83,12 +103,12 @@ export default function AdminUsers() {
       label: "User",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm flex-shrink-0">
             {row.name?.charAt(0)}
           </div>
-          <div>
-            <p className="font-medium text-dark">{row.name}</p>
-            <p className="text-xs text-gray-400">{row.email}</p>
+          <div className="min-w-0">
+            <p className="font-medium text-dark truncate">{row.name}</p>
+            <p className="text-xs text-gray-400 truncate">{row.email}</p>
           </div>
         </div>
       ),
@@ -109,7 +129,6 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-heading text-3xl text-primary mb-2">Manage Users</h1>
@@ -160,32 +179,35 @@ export default function AdminUsers() {
 
       <FormModal
         isOpen={showForm}
-        onClose={() => { setShowForm(false); setEditing(null); }}
+        onClose={() => { setShowForm(false); setEditing(null); setErrors({}); }}
         title={editing ? "Edit User" : "Add New User"}
         maxWidth="max-w-md"
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-            <input name="name" value={form.name} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="John Doe" />
+            <input ref={nameRef} name="name" value={form.name} onChange={handleChange} className={inputClass("name", errors)} placeholder="John Doe" />
+            <FormError message={errors.name} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <input name="email" type="email" value={form.email} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="user@example.com" />
+            <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass("email", errors)} placeholder="user@example.com" />
+            <FormError message={errors.email} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{editing ? "New Password (leave blank to keep)" : "Password *"}</label>
-            <input name="password" type="password" value={form.password} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition" placeholder="********" />
+            <input name="password" type="password" value={form.password} onChange={handleChange} className={inputClass("password", errors)} placeholder="********" />
+            <FormError message={errors.password} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <select name="role" value={form.role} onChange={handleChange} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-dark text-sm outline-none focus:border-primary transition bg-white">
+            <select name="role" value={form.role} onChange={handleChange} className={`${inputClass("role", errors)} bg-white`}>
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-          <div className="flex justify-end gap-3 pt-4">
-            <button onClick={() => { setShowForm(false); setEditing(null); }} className="px-5 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition">Cancel</button>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
+            <button onClick={() => { setShowForm(false); setEditing(null); setErrors({}); }} className="px-5 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition">Cancel</button>
             <button onClick={handleSave} className="px-6 py-3 rounded-xl bg-primary text-dark text-sm font-semibold hover:scale-105 transition-all duration-200 shadow-lg shadow-primary/20">
               {editing ? "Save Changes" : "Create User"}
             </button>
